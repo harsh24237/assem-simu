@@ -30,6 +30,7 @@ opcode_mapping = {
 }
 
 
+
 register_mapping = {
     # Special Purpose Registers used for assembler
     "zero": 0, "ra": 1, "sp": 2, "gp": 3, "tp": 4,
@@ -45,6 +46,40 @@ register_mapping = {
     "a0": 10, "a1": 11, "a2": 12, "a3": 13, "a4": 14,
     "a5": 15, "a6": 16, "a7": 17
 }
+def instruction_parsing(instruction, curr_address, labels):
+    pt = instruction.replace(',', ' ').split()
+    if not pt:
+        return None
+    
+    op_code = pt[0]
+
+    if op_code in opcode_mapping:
+        
+        op = opcode_mapping[op_code]
+        
+        if op_code in ["add", "slt", "sub", "srl", "or", "xor"]:
+            rd = register_mapping[pt[1]]
+            rs1 = register_mapping[pt[2]]
+            rs2 = register_mapping[pt[3]]
+            op_bin, fun3, fun7 = op[0], op[1], op[2]
+            return f"{fun7}{rs2:05b}{rs1:05b}{fun3}{rd:05b}{op_bin}"
+
+        elif op_code in ["jalr", "addi"]:
+            rd, rs1, imm = register_mapping[pt[1]], register_mapping[pt[2]], int(pt[3])
+            imm_binary = f"{imm & 0xFFF:012b}"
+            return f"{imm_binary}{rs1:05b}{op[1]}{rd:05b}{op[0]}"
+        
+        elif op_code in ["sw", "lw"]:
+            matching = re.match(r'(-?\d+)\((\w+)\)', pt[2])
+            if matching:
+                offseting = int(matching.group(1))
+                b_reg = register_mapping[matching.group(2)]
+                rd_or_rs2 = register_mapping[pt[1]]
+                imm_binary = f"{offseting & 0xFFF:012b}"
+                if op_code != "lw":
+                    return f"{imm_binary[:7]}{rd_or_rs2:05b}{b_reg:05b}{op[1]}{imm_binary[7:]}{op[0]}"
+                else:
+                    return f"{imm_binary}{b_reg:05b}{op[1]}{rd_or_rs2:05b}{op[0]}"
 def assembler_code(output_file,input_file):
     f=open(input_file, 'r')
     lines = f.readlines()
