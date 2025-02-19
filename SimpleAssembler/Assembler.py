@@ -80,6 +80,32 @@ def instruction_parsing(instruction, curr_address, labels):
                     return f"{imm_binary[:7]}{rd_or_rs2:05b}{b_reg:05b}{op[1]}{imm_binary[7:]}{op[0]}"
                 else:
                     return f"{imm_binary}{b_reg:05b}{op[1]}{rd_or_rs2:05b}{op[0]}"
+         elif op_code in ["bne", "beq", "blt", "bge", "bltu"]:
+            rs1, rs2, label = register_mapping[pt[1]], register_mapping[pt[2]], pt[3]
+            if label in labels:
+                offseting = (labels[label] - curr_address) # <-- Change here from //4 to //2
+            else:
+                offseting = int(label)
+            if offseting < 0:
+                offseting = (1 << 13) + offseting  # Convert negative value to two's complement
+            # imm_binary=f"{offseting:0{12}b}"  # Format as a binary string with leading zeros
+            imm_binary = format(offseting, f'0{13}b')
+            return f"{imm_binary[0]}{imm_binary[2:8]}{rs2:05b}{rs1:05b}{op[1]}{imm_binary[8:12]}{imm_binary[1]}{op[0]}"
+
+        
+        elif op_code == "jal":
+            rd, label = register_mapping[pt[1]], pt[2]
+            if label in labels:
+                offseting = (labels[label] - curr_address)
+            else:
+                offseting = int(label)
+            if offseting < 0:
+                offseting = (1 << 21) + offseting  # Convert negative value to two's complement
+            # imm_binary=f"{offseting:0{12}b}"  # Format as a binary string with leading zeros
+            imm_binary = format(offseting, f'0{21}b')
+            return f"{imm_binary[0]}{imm_binary[10:20]}{imm_binary[9]}{imm_binary[1:9]}{rd:05b}{op[0]}"
+    
+    return None
 def assembler_code(output_file,input_file):
     f=open(input_file, 'r')
     lines = f.readlines()
