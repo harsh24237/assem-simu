@@ -29,8 +29,6 @@ opcode_mapping = {
     "jal":  ("1101111",)
 }
 
-
-
 register_mapping = {
     # Special Purpose Registers used for assembler
     "zero": 0, "ra": 1, "sp": 2, "gp": 3, "tp": 4,
@@ -80,7 +78,7 @@ def instruction_parsing(instruction, curr_address, labels):
                     return f"{imm_binary[:7]}{rd_or_rs2:05b}{b_reg:05b}{op[1]}{imm_binary[7:]}{op[0]}"
                 else:
                     return f"{imm_binary}{b_reg:05b}{op[1]}{rd_or_rs2:05b}{op[0]}"
-         elif op_code in ["bne", "beq", "blt", "bge", "bltu"]:
+        elif op_code in ["bne", "beq", "blt", "bge", "bltu"]:
             rs1, rs2, label = register_mapping[pt[1]], register_mapping[pt[2]], pt[3]
             if label in labels:
                 offseting = (labels[label] - curr_address) # <-- Change here from //4 to //2
