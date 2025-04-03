@@ -187,3 +187,41 @@ def simulator(inputf):
 
     return (b_t, d_t, data_mem)
 
+args = [arg for arg in sys.argv[1:] if not arg.startswith("--")]
+if len(args) < 2:
+    print("Usage: python3 simulator.py <inputf> <output_file_base>")
+    sys.exit(1)
+
+inputf = args[0]
+output_base = args[1]
+
+base, ext = os.path.splitext(output_base)
+file1 = output_base + ".txt" if ext == "" else output_base
+file2 = f"{base}_r.txt" if ext == "" else f"{base}_r{ext}"
+
+bin_trace, dec_trace, data_mem = simulator(inputf)
+
+try:
+    with open(file1, 'w') as f:
+        for ln in bin_trace:
+            f.write(ln + "\n")
+        for i in range(32):
+            addr = 0x00010000 + i * 4
+            val = data_mem[i]
+            f.write(f"0x{addr:08X}:0b{val:032b}\n")
+except Exception as e:
+    print(f"Error writing file '{file1}': {e}")
+    sys.exit(1)
+
+try:
+    with open(file2, 'w') as f:
+        for ln in dec_trace:
+            f.write(ln + "\n")
+        for i in range(32):
+            addr = 0x00010000 + i * 4
+            val = data_mem[i]
+            f.write(f"0x{addr:08X}:{val}\n")
+except Exception as e:
+    print(f"Error writing file '{file2}': {e}")
+    sys.exit(1)
+
